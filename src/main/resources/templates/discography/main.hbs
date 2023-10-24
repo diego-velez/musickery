@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Scan for music</title>
+    <link rel="stylesheet" type="text/css" href="/static/css/discography.css"/>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const detailsElements = document.querySelectorAll("details");
+            const myForm = document.getElementById("myForm");
+
+            detailsElements.forEach(details => {
+                details.addEventListener("mouseenter", function () {
+                    if (!details.open) {
+                        details.classList.add("closed-hover");
+                    }
+                });
+                details.addEventListener("mouseleave", function () {
+                    details.classList.remove("closed-hover");
+                });
+
+                details.addEventListener("toggle", function () {
+                    if (details.open) {
+                        details.classList.remove("closed-hover");
+                    } else if (!details.open) {
+                        details.classList.add("closed-hover");
+                    }
+                });
+            });
+
+            myForm.addEventListener("submit", (event) => {
+                event.preventDefault();
+
+                const folder = document.getElementById("folder");
+
+                fetch("/discography/scan?" + new URLSearchParams({
+                    folder: folder.value,
+                }))
+                        .then((response) => {
+                            if (!response.ok) {
+                                throw new Error("Error getting songs");
+                            }
+
+                            return response.text();
+                        })
+                        .then((discographyHTML) => {
+                            console.log(discographyHTML)
+                        });
+            });
+        });
+    </script>
+</head>
+<body>
+<h1>Music library</h1>
+<!-- TODO: Don't reload here -->
+<form id="myForm">
+    <label for="folder">Music Folder:</label>
+    <input type="text" id="folder" name="folder" value={{default}}/>
+    <button type="submit">Submit</button>
+</form>
+
+{{#artists.isEmpty}}
+    <h1>No songs found yet!</h1>
+{{/artists.isEmpty}}
+{{^artists.isEmpty}}
+    <h1>Songs Found</h1>
+    {{#artists}}
+        {{>artist}}
+    {{/artists}}
+{{/artists.isEmpty}}
+</body>
+</html>

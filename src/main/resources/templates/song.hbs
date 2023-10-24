@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{song.uniqueTitle}}</title>
+    <link rel="stylesheet" type="text/css" href="/static/css/song.css"/>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const popupMenu = document.getElementById("popupMenu");
+            const popupMenuList = document.getElementById("popupMenuList");
+            let addTag = document.getElementById("add_tag");
+            const container = document.querySelector(".container");
+            const tagsList = document.getElementById("tags_list");
+            const titles = document.getElementById("titles");
+            const coverArtContainer = document.getElementById("cover_art");
+            const coverArtImg = document.getElementById("cover_art_img");
+            const popupMenuContainer = document.getElementById("popupMenuContainer");
+
+            function registerListEditable(editable) {
+                editable.addEventListener("click", () => {
+                    const inputField = document.createElement("input");
+
+                    inputField.type = "text";
+                    inputField.value = editable.textContent;
+                    inputField.style.width = "100%";
+                    editable.replaceWith(inputField);
+                    inputField.focus();
+
+                    inputField.addEventListener("blur", () => {
+                        const valueDiv = document.createElement("div");
+                        valueDiv.classList.add("editable");
+                        valueDiv.textContent = inputField.value;
+                        inputField.replaceWith(valueDiv);
+                        registerListEditable(valueDiv);
+
+                        const containerDiv = valueDiv.closest(".tags");
+                        const key = containerDiv.previousElementSibling;
+                        const dataToSend = {"type": key.textContent, "value": valueDiv.textContent};
+
+                        fetch("/song/tags/" + getSongHashCode(), {
+                            method: "PUT",
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify(dataToSend),
+                        });
+                    });
+                });
+            }
+
+            function registerListTagName(tagNameDiv) {
+                if (tagNameDiv.textContent === "COVER_ART") {
+                    // TODO: Delete image automatically
+                    return;
+                }
+
+                const deleteTagButton = document.createElement("button");
+                deleteTagButton.textContent = "-";
+
+                tagNameDiv.addEventListener("mouseenter", () => {
+                    tagNameDiv.insertBefore(deleteTagButton, tagNameDiv.firstChild);
+                    deleteTagButton.style.height = "100%";
+                    deleteTagButton.style.width = deleteTagButton.getBoundingClientRect().height + "px";
+                });
+
+                tagNameDiv.addEventListener("mouseleave", () => {
+                    deleteTagButton.remove();
+                });
+
+                deleteTagButton.addEventListener("click", () => {
+                    const tagName = tagNameDiv.textContent.replace("-", "");
+
+                    fetch("/song/tags/" + getSongHashCode(), {
+                        method: "DELETE",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: tagName,
+                    })
+                            .then((response) => {
+                                if (!response.ok) {
+                                    throw new Error("Could not delete tag " + tagName);
+                                }
+
+                                const itemLi = tagNameDiv.closest(".item");
+                                itemLi.remove();
+                                showAddTagButton();
+                                addButtonToPopupMenu(tagName);
+                                hidePopupMenu();
+                            });
+                });
+
+            }
+
+            function getSongHashCode() {
+                const url = window.location.href;
+                const splitUrl = url.split("/");
+                return splitUrl[splitUrl.length - 1];
+
+            }
+
+            function adjustPopupMenuPosition() {
+                if (popupMenu.style.display === "none") {
+                    return;
+                }
+
+                const addTagPopupMenuSpacing = 10;
+
+                const addTagRect = addTag.getBoundingClientRect();
+
+                const positionLeft = addTagRect.left + addTagRect.width + addTagPopupMenuSpacing;
+                const positionTop = addTagRect.top;
+
+                popupMenu.style.left = `${positionLeft}px`;
+                popupMenu.style.top = `${positionTop}px`;
+            }
+
+            function createTagItem(button) {
+                const keyDiv = document.createElement("div");
+                keyDiv.classList.add("tag_name");
+                keyDiv.textContent = button.textContent;
+                registerListTagName(keyDiv);
+
+                const tagsDiv = document.createElement("div");
+                tagsDiv.classList.add("tags");
+
+                const innerTagsDiv = document.createElement("div");
+
+                const tagValueType = document.createElement("div");
+                tagValueType.innerText = "Text:"
+
+                const tagValueEditable = document.createElement("div");
+                tagValueEditable.classList.add("editable");
+                tagValueEditable.style.width = "100%";
+                registerListEditable(tagValueEditable);
+
+                innerTagsDiv.appendChild(tagValueType);
+                innerTagsDiv.appendChild(tagValueEditable);
+
+                tagsDiv.appendChild(innerTagsDiv);
+
+                const itemLi = document.createElement("li");
+                itemLi.classList.add("item");
+                itemLi.appendChild(keyDiv);
+                itemLi.appendChild(tagsDiv);
+
+                tagsList.appendChild(itemLi);
+
+                tagValueEditable.click();
+                tagValueEditable.focus();
+            }
+
+            function addButtonToPopupMenu(tag) {
+                const button = document.createElement("button");
+                button.textContent = tag;
+                registerPopupMenuButton(button);
+
+                const listItem = document.createElement("li");
+                listItem.appendChild(button);
+
+                popupMenuList.appendChild(listItem);
+
+                // Whitespace is not added automatically for some reason
+                // This adds whitespace between list items
+                const whitespace = document.createTextNode(" ");
+                popupMenuList.appendChild(whitespace);
+
+                const addTagRect = addTag.getBoundingClientRect();
+
+                button.style.height = `${addTagRect.height}px`;
+                button.style.paddingLeft = "10px";
+                button.style.paddingRight = "10px";
+            }
+
+            function registerPopupMenuButton(button) {
+                button.addEventListener("click", () => {
+                    createTagItem(button);
+                    // Remove entire li instead of just button to prevent leaving empty li
+                    button.parentElement.remove();
+
+                    if (popupMenuList.childElementCount === 0) {
+                        removeAddTagButton();
+                    }
+                });
+            }
+
+            function removeAddTagButton() {
+                addTag.remove();
+                container.style.marginTop = "0";
+            }
+
+            function showAddTagButton() {
+                if (!popupMenuContainer.contains(addTag)) {
+                    popupMenuContainer.insertBefore(addTag, popupMenuContainer.firstChild);
+                }
+                container.style.marginTop = `-${addTag.getBoundingClientRect().height}px`;
+            }
+
+            function popupMenuIsShowing() {
+                return popupMenu.style.display === "block";
+            }
+
+            function showPopupMenu() {
+                // TODO: Animate popup when showing up and disappearing
+                popupMenu.style.display = "block";
+                adjustPopupMenuPosition();
+                addTag.innerText = ">";
+            }
+
+            function hidePopupMenu() {
+                popupMenu.style.display = "none";
+                addTag.innerText = "+";
+            }
+
+            document.querySelectorAll(".editable").forEach(editable => {
+                registerListEditable(editable);
+            });
+
+            addTag.addEventListener("click", () => {
+                if (popupMenuIsShowing()) {
+                    hidePopupMenu();
+                } else {
+                    showPopupMenu();
+                }
+            });
+
+            window.addEventListener("resize", adjustPopupMenuPosition);
+
+            coverArtImg.addEventListener("click", () => {
+                const coverArtImgContainer = coverArtImg.parentElement;
+                // Don't add input element if there is already an input element
+                if (coverArtImgContainer.childElementCount === 2) {
+                    return;
+                }
+
+                const coverArtUrlInput = document.createElement("input");
+                coverArtUrlInput.type = "url";
+                coverArtImgContainer.appendChild(coverArtUrlInput);
+                coverArtUrlInput.focus();
+
+                coverArtUrlInput.addEventListener("blur", () => {
+                    const loaderElement = document.createElement("div");
+                    loaderElement.classList.add("loader");
+                    coverArtImg.replaceWith(loaderElement);
+                    const url = coverArtUrlInput.value;
+                    coverArtUrlInput.remove();
+
+                    fetch("/song/cover_art/new/" + getSongHashCode(), {
+                        method: "POST",
+                        body: url,
+                    })
+                            .then((response) => {
+                                if (!response.ok) {
+                                    throw new Error("Could not get cover art");
+                                }
+
+                                return response.blob();
+                            })
+                            .then((img) => {
+                                // TODO: Add image tag too
+                                const imgUrl = URL.createObjectURL(img);
+                                loaderElement.replaceWith(coverArtImg);
+                                coverArtImg.src = imgUrl;
+                            })
+                            .catch(() => {
+                                const errorText = document.createElement("span");
+                                errorText.innerText = "Error getting image!";
+                                loaderElement.replaceWith(errorText);
+                            });
+                });
+            });
+
+            document.querySelectorAll(".tag_name").forEach(tagNameDiv => {
+                registerListTagName(tagNameDiv);
+            });
+
+            // Cover art container min height should be the same as the .titles sibling
+            coverArtContainer.style.minHeight = `${titles.getBoundingClientRect().height}px`;
+
+            fetch("/song/tags/" + getSongHashCode())
+                    .then((response) => {
+                        if (!response.ok) {
+                            throw new Error("Could not get song tags!");
+                        }
+
+                        return response.json();
+                    })
+                    .then(tags => {
+                        tags.forEach((tag) => {
+                            addButtonToPopupMenu(tag)
+                        });
+                    });
+        });
+    </script>
+</head>
+<body>
+<div class="header">
+    <div id="titles">
+        <h1 class="title">{{song.title}}</h1>
+        <h2 class="subtitle">{{song.artist}}</h2>
+        <h4 class="subtitle">{{song.absolutePath}}</h4>
+    </div>
+    <div id="cover_art">
+        <img id="cover_art_img" src="/song/cover_art/{{song.hash}}">
+    </div>
+</div>
+
+<div class="container">
+    <div id="popupMenuContainer">
+        <button id="add_tag">+</button>
+        <div id="popupMenu" class="hidden">
+            <ul id="popupMenuList">
+            </ul>
+        </div>
+    </div>
+    <ul id="tags_list" class="item-list">
+        {{#song.tags}}
+            <li class="item">
+                <div class="tag_name">{{name}}</div>
+                <div class="tags">
+                    {{#ids}}
+                        <div>
+                            <div>{{type}}:</div>
+                            <div {{#editable}}class="editable"{{/editable}}>{{value}}</div>
+                        </div>
+                    {{/ids}}
+                </div>
+            </li>
+        {{/song.tags}}
+    </ul>
+</div>
+</body>
+</html>

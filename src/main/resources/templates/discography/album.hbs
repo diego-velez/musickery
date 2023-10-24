@@ -1,0 +1,21 @@
+<details class="tabbed">
+    <summary>{{album}}</summary>
+    {{#ordered}}
+        <ol>
+            {{#songs}}
+                <li>
+                    <a href="/song/{{hash}}">{{title}}</a>
+                </li>
+            {{/songs}}
+        </ol>
+    {{/ordered}}
+    {{^ordered}}
+        <ul>
+            {{#songs}}
+                <li>
+                    <a href="/song/{{hash}}">{{title}}</a>
+                </li>
+            {{/songs}}
+        </ul>
+    {{/ordered}}
+</details>

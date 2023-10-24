@@ -1,0 +1,189 @@
+
+body {
+    background-color: #282A36;
+    color: #F8F8F2;
+}
+
+.header {
+    display: flex;
+    flex-direction: row;
+    text-align: center;
+    margin-left: 120px;
+    margin-right: 120px;
+    margin-top: 10px;
+}
+
+#titles {
+    flex: 70%;
+    text-align: left;
+}
+
+#cover_art {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 30%;
+    border-radius: 20px;
+    border-width: 2px;
+    border-style: solid;
+    border-color: #F8F8F2;
+    padding: 10px;
+}
+
+#cover_art > img {
+    max-width: 100%;
+}
+
+.title {
+    color: #FF79C6;
+}
+
+.subtitle {
+    color: #BD93F9;
+}
+
+.container {
+    margin: 20px;
+    /* This has to be the same height as the add tag button, or else when button gets deleted a shift will be noticeable*/
+    margin-top: -28px;
+    padding-left: 100px;
+    padding-right: 100px;
+}
+
+#add_tag {
+    cursor: pointer;
+    border-radius: 20px;
+    border-style: none;
+    background-color: #50FA7B;
+    color: #282A36;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left: 10px;
+    padding-right: 10px;
+    transition: background-color 0.4s, color 0.4s;
+}
+
+#add_tag:active {
+    background-color: #282A36;
+    color: #50FA7B;
+}
+
+#popupMenu {
+    display: none;
+    position: absolute;
+    /*color: #282A36;*/
+    /*background-color: #F8F8F2;*/
+    z-index: 1;
+    border-radius: 20px;
+    transition: opacity 0.4s ease;
+}
+
+#popupMenu > ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+#popupMenu > ul > li {
+    text-align: center;
+    display: inline-block;
+    /*margin: 5px;*/
+    margin: 0;
+    height: 100%;
+}
+
+#popupMenu > ul > li > button {
+    background-color: #50FA7B;
+    color: #282A36;
+    border-style: none;
+    border-color: #282A36;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background-color 0.4s, color 0.4s;
+}
+
+#popupMenu > ul > li > button:active {
+    background-color: #282A36;
+    color: #F8F8F2;
+}
+
+.item-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+.item {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left: 15px;
+    padding-right: 15px;
+    border-radius: 20px;
+    border-width: 2px;
+    border-style: solid;
+    border-color: #F8F8F2;
+}
+
+.item > div {
+    flex: 1;
+}
+
+.tags {
+    display: flex;
+    flex-direction: column;
+}
+
+
+.tags > div {
+    display: flex;
+    flex-direction: row;
+}
+
+.tags > div > div {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+
+.loader {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* JS should style this into a square button */
+.tag_name > button {
+    cursor: pointer;
+    border-radius: 20px;
+    border-style: none;
+    background-color: #50FA7B;
+    color: #282A36;
+    padding: 0;
+    transition: background-color 0.4s, color 0.4s;
+}
+
+.tag_name > button:active {
+    background-color: #282A36;
+    color: #50FA7B;
+}
+
+.editable {
+    width: 100%;
+    cursor: pointer;
+}

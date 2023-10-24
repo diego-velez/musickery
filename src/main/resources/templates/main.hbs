@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Musickery</title>
+    <link rel="stylesheet" type="text/css" href="/static/css/main.css" />
+    <script>
+        fetch("/logs")
+                .then(response => response.text())
+                .then(logs => {
+                    const logContainer = document.getElementById("logs");
+                    logContainer.textContent = logs;
+                })
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="top half">
+            <h1>Musickery</h1>
+
+            <div class="buttons">
+                <form action="/discography">
+                    <button>Discography</button>
+                </form>
+                <form action="/download">
+                    <button>Downloads</button>
+                </form>
+            </div>
+        </div>
+        <div class="bottom half">
+            <pre id="logs"></pre>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,88 @@
+/* Sets the background color and text color for the body */
+body {
+    background-color: #282A36;
+    color: #F8F8F2;
+}
+
+h1 {
+    text-align: center;
+    color: #FF79C6;
+}
+
+h2 {
+    text-align: center;
+    color: #FF79C6;
+}
+
+form {
+    text-align: center;
+}
+
+label {
+    color: #BD93F9;
+}
+
+button {
+    cursor: pointer;
+    border-radius: 20px;
+    border-style: none;
+    background-color: #50FA7B;
+    color: #282A36;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    padding-left: 6px;
+    padding-right: 6px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+button:active {
+    background-color: #282A36;
+    color: #50FA7B;
+}
+
+summary {
+    list-style-type: none;
+    cursor: pointer;
+}
+
+summary:hover {
+    color: #50FA7B;
+}
+
+.tabbed {
+    margin-left: 50px;
+}
+
+.super-tabbed {
+    margin-left: 200px;
+    margin-right: 200px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding-left: 15px;
+    padding-right: 15px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    border-radius: 20px;
+    border-width: 2px;
+    border-style: solid;
+    border-color: #F8F8F2;
+}
+
+ul, ol {
+    margin: 0 0 0 0;
+}
+
+li:hover {
+    color: #50FA7B;
+}
+
+a {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    width: 100%;
+}
+
+a:hover {
+    text-decoration: underline;
+}
