@@ -15,6 +15,7 @@ fun RootRoutingBuilder.discographyRoute() {
         }
         get("scan") {
             val musicFolder = File(call.request.queryParameters.getOrFail("folder"))
+            // BUG: Crash if spammed
             Scanner.scan(musicFolder)
             call.respond(getDiscographyHTML(musicFolder))
         }

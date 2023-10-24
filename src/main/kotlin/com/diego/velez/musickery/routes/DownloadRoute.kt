@@ -31,7 +31,7 @@ fun RootRoutingBuilder.downloadRoute() {
             }
 
             model["songs"] = SongDownloader.downloadedSongs.map { it.serialized() }
-            call.respond(MustacheContent("download.hbs", model))
+            call.respond(MustacheContent("download/download.hbs", model))
         }
 
         sse("process") {
@@ -77,7 +77,7 @@ fun RootRoutingBuilder.downloadRoute() {
             // We could return the JSong from downloadSong and just add that list item to the list.
             get("list") {
                 val model = mapOf("songs" to SongDownloader.downloadedSongs.map { it.serialized() })
-                call.respond(MustacheContent("song_list.hbs", model))
+                call.respond(MustacheContent("download/song_list.hbs", model))
             }
         }
     }
