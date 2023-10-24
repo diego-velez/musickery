@@ -10,6 +10,7 @@ import java.util.logging.Formatter
  * Handles all logging logic.
  */
 object Logging {
+    // BUG: Crash when logs/main.log does not exist
     private val MAIN_LOG_FILE = File("logs/main.log")
 
     // Formats date like so: 23MAR2266 (FRIDAY) @ 00:58
