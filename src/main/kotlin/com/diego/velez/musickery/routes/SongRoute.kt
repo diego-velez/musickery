@@ -25,7 +25,7 @@ fun RootRoutingBuilder.songRoute() {
             val songHash = call.parameters.getOrFail("songHash").toInt()
             val song = Discography.allSongs[songHash]!!.serialized()
 
-            call.respond(MustacheContent("song/song.hbs", mapOf("song" to song)))
+            call.respond(MustacheContent("song/main.hbs", mapOf("song" to song)))
         }
 
         route("cover_art") {

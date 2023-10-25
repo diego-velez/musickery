@@ -31,7 +31,7 @@ fun RootRoutingBuilder.downloadRoute() {
             }
 
             model["songs"] = SongDownloader.downloadedSongs.map { it.serialized() }
-            call.respond(MustacheContent("download/download.hbs", model))
+            call.respond(MustacheContent("download/main.hbs", model))
         }
 
         sse("process") {
