@@ -12,8 +12,9 @@ object Terminal {
      *
      * @return The output of the command.
      */
-    suspend fun run(command: List<String>, callback: LineOutput): Result = withContext(Dispatchers.IO) {
+    suspend fun run(command: List<String>, callback: LineOutput = {}): Result = withContext(Dispatchers.IO) {
         val processBuilder = ProcessBuilder(command)
+        processBuilder.redirectErrorStream(true)
         val process = processBuilder.start()
         val reader = process.inputReader()
 
@@ -35,10 +36,10 @@ object Terminal {
 
         // Process failed
         if (exitCode != 0) {
-            Result.Failed(output.toString(), exitCode)
+            return@withContext Result.Failed(output.toString(), exitCode)
         }
 
-        Result.Success(output.toString(), exitCode)
+        return@withContext Result.Success(output.toString(), exitCode)
     }
 
     sealed class Result(val output: String, val exitCode: Int) {
