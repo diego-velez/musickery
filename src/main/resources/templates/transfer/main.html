@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Transfer songs</title>
+    <link rel="stylesheet" type="text/css" href="/static/css/transfer.css"/>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const lsButton = document.getElementById("ls");
+            const output = document.getElementById("output");
+
+            lsButton.addEventListener("click", (event) => {
+                event.preventDefault();
+
+                fetch("/transfer/ls")
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error("Could not run ls");
+                        }
+
+                        return response.text();
+                    })
+                    .then((text) => {
+                        if (text.length === 0) {
+                            text = "No musics files in device!";
+                        }
+
+                        if (output.innerText.length === 0) {
+                            output.innerText = text;
+                        } else {
+                            output.innerText = output.innerText + "\n" + text;
+                        }
+                        output.scrollTop = output.scrollHeight;
+                    });
+            });
+        });
+    </script>
+</head>
+<body>
+<div class="container">
+    <div class="top half">
+        <div class="buttons">
+            <button id="ls">ls</button>
+        </div>
+    </div>
+    <div class="bottom half">
+        <pre id="output"></pre>
+    </div>
+</div>
+</body>
+</html>
