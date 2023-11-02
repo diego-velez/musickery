@@ -12,11 +12,11 @@ val COVER_ART_FOLDER = File("cover_art")
 object Discography {
     private val logger = Logging.getLogger(this)
 
-    // Key is each song's absolute path's hash code
     private val _allSongs = Collections.synchronizedMap(mutableMapOf<Int, Song>())
     private val artistMap = Collections.synchronizedMap(mutableMapOf<String, Artist>())
     private val albumMap = Collections.synchronizedMap(mutableMapOf<String, Album>())
 
+    // The key is each song's absolute path's hash code
     val allSongs: Map<Int, Song>
         get() = _allSongs
 

@@ -19,7 +19,6 @@ fun RootRoutingBuilder.discographyRoute() {
         }
         get("scan") {
             val musicFolder = File(call.request.queryParameters.getOrFail("folder"))
-            // BUG: Crash if spammed
             Scanner.scan(musicFolder)
             val model = mapOf("artists" to Discography.discography)
             call.respond(MustacheContent("discography/artists.hbs", model))

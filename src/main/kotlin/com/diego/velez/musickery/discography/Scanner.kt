@@ -35,6 +35,7 @@ object Scanner {
 
             if (jobsLeft.get() == 0) {
                 logger.info("Found $songsFound songs")
+                songsFound.set(0)
             }
         }
 
@@ -67,6 +68,11 @@ object Scanner {
      * Checks if [songFile] is a valid [Song], then adds it to the [Discography].
      */
     private fun foundSong(songFile: File) {
+        // Do not add song if it was already added
+        if (Discography.allSongs.containsKey(songFile.absolutePath.hashCode())) {
+            return
+        }
+
         if (songFile.extension == "mp3" || songFile.extension == "ogg") {
             val song = Song(songFile)
             Discography.addSong(song)
