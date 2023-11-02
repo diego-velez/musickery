@@ -43,7 +43,7 @@ object Terminal {
     }
 
     sealed class Result(val output: String, val exitCode: Int) {
-        class Success(output: String, exitCode: Int) : Result(output, exitCode)
-        class Failed(output: String, exitCode: Int) : Result(output, exitCode)
+        class Success(output: String, exitCode: Int) : Result(output.trim(), exitCode)
+        class Failed(output: String, exitCode: Int) : Result(output.trim(), exitCode)
     }
 }
