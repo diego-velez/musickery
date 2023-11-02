@@ -20,27 +20,24 @@ object Scanner {
 
     /**
      * Scans [musicFolder] recursively for all song files.
-     *
-     * Automatically adds all songs found to the [Discography]
+     * Automatically adds all songs found to the [Discography].
+     * @param musicFolder The absolute path of the music folder to scan the songs of.
+     * @return The amount of songs that the scan found.
      */
-    suspend fun scan(musicFolder: File) =
+    suspend fun scan(musicFolder: File): Int =
         coroutineScope {
             logger.info("Scanning $musicFolder for songs...")
+            songsFound.set(0)
 
-            val asyncJobs = musicFolder.listFiles()!!.map { file ->
-                processFile(file)
-            }
-
+            val asyncJobs = musicFolder.listFiles()!!.map { processFile(it) }
             asyncJobs.forEach { it.await() }
 
-            if (jobsLeft.get() == 0) {
-                logger.info("Found $songsFound songs")
-                songsFound.set(0)
-            }
+            logger.info("Found $songsFound songs")
+            return@coroutineScope songsFound.get()
         }
 
     /**
-     * Processes each [File] object withing the music folder.
+     * Processes each [File] object within the music folder.
      *
      * If the [File] is a folder, then it'll go through each [File] object within, assigning
      * a new [processFile] task to each folder or calling [foundSong] to each file.
@@ -48,17 +45,10 @@ object Scanner {
     private fun CoroutineScope.processFile(file: File): Deferred<Unit> = async {
         jobsLeft.incrementAndGet()
 
-        if (file.isDirectory) {
-            file.listFiles()!!
-                .forEach {
-                    if (it.isFile) {
-                        foundSong(it)
-                    } else {
-                        processFile(it).start()
-                    }
-                }
-        } else {
+        if (file.isFile) {
             foundSong(file)
+        } else {
+            file.listFiles()!!.forEach { processFile(it).start() }
         }
 
         jobsLeft.decrementAndGet()

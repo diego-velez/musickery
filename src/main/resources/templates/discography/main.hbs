@@ -41,6 +41,10 @@
                                 throw new Error("Error getting songs");
                             }
 
+                            if (response.status === 204) {
+                                return Promise.reject("No new songs were found");
+                            }
+
                             return response.text();
                         })
                         .then((discographyHTML) => {
