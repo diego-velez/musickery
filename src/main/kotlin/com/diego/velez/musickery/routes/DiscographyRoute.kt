@@ -11,21 +11,18 @@ import java.io.File
 fun RootRoutingBuilder.discographyRoute() {
     route("discography") {
         get {
-            call.respond(getDiscographyHTML(Discography.getDefaultMusicFolder()))
+            val model = mapOf(
+                "default" to Discography.getDefaultMusicFolder().absolutePath,
+                "artists" to Discography.discography
+            )
+            call.respond(MustacheContent("discography/main.hbs", model))
         }
         get("scan") {
             val musicFolder = File(call.request.queryParameters.getOrFail("folder"))
             // BUG: Crash if spammed
             Scanner.scan(musicFolder)
-            call.respond(getDiscographyHTML(musicFolder))
+            val model = mapOf("artists" to Discography.discography)
+            call.respond(MustacheContent("discography/artists.hbs", model))
         }
     }
-}
-
-fun getDiscographyHTML(musicFolder: File): MustacheContent {
-    val model = mapOf(
-        "default" to musicFolder.absolutePath,
-        "artists" to Discography.discography
-    )
-    return MustacheContent("discography/main.hbs", model)
 }

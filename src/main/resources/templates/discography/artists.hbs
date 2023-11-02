@@ -1,0 +1,16 @@
+{{#artists.isEmpty}}
+    <h1>No songs found yet!</h1>
+{{/artists.isEmpty}}
+{{^artists.isEmpty}}
+    <h1>Songs Found</h1>
+    {{#artists}}
+        <div class="super-tabbed">
+            <details>
+                <summary>{{artist}}</summary>
+                {{#albums}}
+                    {{>album}}
+                {{/albums}}
+            </details>
+        </div>
+    {{/artists}}
+{{/artists.isEmpty}}

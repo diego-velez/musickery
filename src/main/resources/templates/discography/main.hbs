@@ -7,6 +7,7 @@
         document.addEventListener("DOMContentLoaded", function () {
             const detailsElements = document.querySelectorAll("details");
             const myForm = document.getElementById("myForm");
+            const discographyList = document.getElementById("discography_list");
 
             detailsElements.forEach(details => {
                 details.addEventListener("mouseenter", function () {
@@ -43,8 +44,7 @@
                             return response.text();
                         })
                         .then((discographyHTML) => {
-                            // TODO: implement
-                            console.log(discographyHTML)
+                            discographyList.innerHTML = discographyHTML;
                         });
             });
         });
@@ -59,14 +59,8 @@
     <button type="submit">Submit</button>
 </form>
 
-{{#artists.isEmpty}}
-    <h1>No songs found yet!</h1>
-{{/artists.isEmpty}}
-{{^artists.isEmpty}}
-    <h1>Songs Found</h1>
-    {{#artists}}
-        {{>artist}}
-    {{/artists}}
-{{/artists.isEmpty}}
+<div id="discography_list">
+    {{>artists}}
+</div>
 </body>
 </html>
