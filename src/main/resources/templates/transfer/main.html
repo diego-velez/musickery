@@ -7,31 +7,49 @@
         document.addEventListener("DOMContentLoaded", () => {
             const lsButton = document.getElementById("ls");
             const output = document.getElementById("output");
+            const toDevice = document.getElementById("to-device");
+            const phoneId = document.getElementById("phone-id");
+
+            // Add output text to output "window"
+            function addOutput(text) {
+                if (output.innerText.length === 0) {
+                    output.innerText = text;
+                } else {
+                    output.innerText = output.innerText + "\n" + text;
+                }
+                output.scrollTop = output.scrollHeight;
+            }
 
             lsButton.addEventListener("click", (event) => {
                 event.preventDefault();
-
-                fetch("/transfer/ls")
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error("Could not run ls");
-                        }
-
-                        return response.text();
-                    })
-                    .then((text) => {
-                        if (text.length === 0) {
-                            text = "No musics files in device!";
-                        }
-
-                        if (output.innerText.length === 0) {
-                            output.innerText = text;
-                        } else {
-                            output.innerText = output.innerText + "\n" + text;
-                        }
-                        output.scrollTop = output.scrollHeight;
-                    });
+                fetch("/transfer/ls");
             });
+
+            toDevice.addEventListener("click", (event) => {
+                event.preventDefault();
+                fetch("transfer/to-device");
+            });
+
+            // TODO: Constantly scan for devices for when a phone is connected after starting the server
+            fetch("/transfer/devices")
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error("Could not get devices");
+                    }
+                    return response.json();
+                })
+                .then((devices) => {
+                    // TODO: Handle multiple devices
+                    if (devices.length === 1) {
+                        phoneId.innerText = devices[0];
+                    }
+                });
+
+            const outputSource = new EventSource("/transfer/output");
+            outputSource.onmessage = (event) => {
+                const data = event.data;
+                addOutput(data);
+            };
         });
     </script>
 </head>
@@ -39,7 +57,15 @@
 <div class="container">
     <div class="top half">
         <div class="buttons">
-            <button id="ls">ls</button>
+            <form>
+                <button id="ls">ls</button>
+            </form>
+            <form>
+                <button id="to-device">To Device</button>
+            </form>
+        </div>
+        <div class="phone_info">
+            <p id="phone-id">No phone detected</p>
         </div>
     </div>
     <div class="bottom half">
