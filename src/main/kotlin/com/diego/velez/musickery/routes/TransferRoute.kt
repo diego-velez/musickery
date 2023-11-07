@@ -1,6 +1,7 @@
 package com.diego.velez.musickery.routes
 
 import com.diego.velez.musickery.discography.Discography
+import com.diego.velez.musickery.utils.LineOutput
 import com.diego.velez.musickery.utils.Terminal
 import io.ktor.http.*
 import io.ktor.server.mustache.*
@@ -26,18 +27,29 @@ fun RootRoutingBuilder.transferRoute() {
         }
 
         get("ls") {
-            val terminalCommand = "adb shell ls -a /storage/emulated/0/Music".split(" ")
-            val terminalResult = Terminal.run(terminalCommand) {
+            val result = ls {
                 outputChannel.emit(it)
             }
+
+            if (result.output.isBlank()) {
+                outputChannel.emit("Folder is empty")
+            }
+
             call.respond(HttpStatusCode.OK)
         }
 
         get("to-device") {
             // TODO: Run each transfer asynchronously
+            val lsOutput = ls().output
+            val filesInPhone = lsOutput.split("\n")
             Discography.getDefaultMusicFolder()
                 .listFiles()!!
                 .forEach {
+                    // TODO: Check recursively to make sure that all subfolders are in phone
+                    if (filesInPhone.contains(it.name)) {
+                        outputChannel.emit("${it.name} already in phone, skipping.")
+                        return@forEach
+                    }
                     val terminalCommand = "adb push ${it.absolutePath} /storage/emulated/0/Music".split(" ")
                     outputChannel.emit("Transferring ${it.absolutePath}")
                     Terminal.run(terminalCommand) { output ->
@@ -66,4 +78,9 @@ fun RootRoutingBuilder.transferRoute() {
             }
         }
     }
+}
+
+suspend fun ls(callback: LineOutput = {}): Terminal.Result {
+    val terminalCommand = "adb shell ls -a /storage/emulated/0/Music".split(" ")
+    return Terminal.run(terminalCommand, callback)
 }
