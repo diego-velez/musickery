@@ -32,8 +32,10 @@ fun RootRoute.songRoute() {
             get("{songHash}") {
                 val songHash = call.parameters.getOrFail("songHash").toInt()
                 val song = Discography.allSongs[songHash]!!
-                val coverArtFile = song.coverArt ?: return@get call.respond(HttpStatusCode.NotFound)
-                call.respondBytes(coverArtFile.readBytes(), ContentType.Image.JPEG)
+                if (!song.coverArtFile.exists()) {
+                    return@get call.respond(HttpStatusCode.NotFound)
+                }
+                call.respondBytes(song.coverArtFile.readBytes(), ContentType.Image.JPEG)
             }
             post("new/{songHash}") {
                 val songHash = call.parameters.getOrFail("songHash").toInt()

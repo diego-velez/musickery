@@ -12,22 +12,10 @@ class Song(fullPath: String) : File(fullPath) {
     constructor(file: File) : this(file.absolutePath)
 
     // The key is the type of tag (artist, album, etc.); the value map, represents the type of value
-    // and the value itself (Eg. Text=2 Chainz)
+    // and the value itself (E.g. Text=2 Chainz)
     private val _tags: MutableMap<Tag.Name, MutableMap<String, String>> = mutableMapOf()
     private val audioFile: AudioFile = AudioFileIO.read(this)
-    val coverArt: File? = COVER_ART_FOLDER.resolve(absolutePath.hashCode().toString())
-        get() {
-            if (_tags.containsKey(Tag.Name.COVER_ART)) {
-                if (!field!!.exists()) {
-                    field.outputStream().use {
-                        val artwork = audioFile.tag.firstArtwork
-                        it.write(artwork.binaryData)
-                    }
-                }
-                return field
-            }
-            return null
-        }
+    val coverArtFile = COVER_ART_FOLDER.resolve(absolutePath.hashCode().toString())
 
     val tags: Map<Tag.Name, Map<String, String>>
         get() = _tags
@@ -64,16 +52,16 @@ class Song(fullPath: String) : File(fullPath) {
     fun changeCoverArtToImageLink(link: String): File {
         val url = URL(link)
         val image = ImageIO.read(url)
-        ImageIO.write(image, "jpg", coverArt)
+        ImageIO.write(image, "jpg", coverArtFile)
 
         val tag = audioFile.tag
         tag.deleteArtworkField()
-        tag.addField(ArtworkFactory.createArtworkFromFile(coverArt))
+        tag.addField(ArtworkFactory.createArtworkFromFile(coverArtFile))
         audioFile.commit()
 
         _tags[Tag.Name.COVER_ART] = getFieldValues(Tag.Name.COVER_ART)
 
-        return coverArt!!
+        return coverArtFile
     }
 
     fun writeTag(name: Tag.Name, value: String) {
