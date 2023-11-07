@@ -1,13 +1,17 @@
 package com.diego.velez.musickery.routes
 
+import com.diego.velez.musickery.discography.Discography
+import com.diego.velez.musickery.discography.Song
 import com.diego.velez.musickery.discography.Tag
 import com.diego.velez.musickery.download.SongDownloader
+import com.diego.velez.musickery.utils.Terminal
 import io.ktor.server.mustache.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sse.*
 import io.ktor.server.util.*
+import io.ktor.util.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 import java.io.File
 
@@ -42,11 +46,13 @@ fun RootRoute.downloadRoute() {
 
         route("song") {
             post {
+                // TODO: Apply tags
                 val link: String
                 val title: String
                 val artist: String
                 val album: String
                 val genre: String
+                val imageLink: String
 
                 call.receiveParameters().run {
                     link = getOrFail("link")
@@ -54,22 +60,31 @@ fun RootRoute.downloadRoute() {
                     artist = getOrFail("artist")
                     album = getOrFail("album")
                     genre = getOrFail("genre")
+                    imageLink = getOrFail("image-link")
                 }
 
                 // TODO: finish download implementation
-//                var downloadFolder = Discography.getDefaultMusicFolder().resolve(artist)
-//                if (album.isNotEmpty()) {
-//                    downloadFolder = downloadFolder.resolve(album)
-//                }
+                var downloadFolder = Discography.getDefaultMusicFolder().resolve(artist)
+                if (album.isNotEmpty()) {
+                    downloadFolder = downloadFolder.resolve(album)
+                }
 //
-//                val songFile = downloadFolder.resolve("$artist - $title.mp3")
-                val songFile = File("$artist - $title.mp3")
+                val songFile = downloadFolder.resolve("$artist - $title.mp3")
+//                val songFile = File("$artist - $title.mp3")
 
                 // TODO: Handle failed downloads
                 SongDownloader.download(link, songFile.absolutePath) {
                     downloadProcessChannel.emit(it)
                 }
 
+                val song = Song(songFile)
+                song.writeTag(Tag.Name.TITLE, title)
+                song.writeTag(Tag.Name.ARTIST, artist)
+                song.writeTag(Tag.Name.ALBUM, album)
+                song.writeTag(Tag.Name.GENRE, genre)
+                song.changeCoverArtToImageLink(imageLink)
+
+                // BUG: Songs are not sent with updated tags
                 call.respond(SongDownloader.downloadedSongs.map { it.serialized() })
             }
 
