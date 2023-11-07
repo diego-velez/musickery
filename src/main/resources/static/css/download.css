@@ -92,7 +92,7 @@ a:hover {
 .top-pane {
     display: flex;
     align-items: stretch;
-    max-height: 349px;
+    max-height: 391px;
 }
 
 .top-pane > div {
