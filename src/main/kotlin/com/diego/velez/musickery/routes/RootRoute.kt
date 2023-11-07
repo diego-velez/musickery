@@ -5,7 +5,7 @@ import io.ktor.server.mustache.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-fun RootRoutingBuilder.rootRoute() {
+fun RootRoute.rootRoute() {
     route("") {
         get {
             call.respond(MustacheContent("main.hbs", null))

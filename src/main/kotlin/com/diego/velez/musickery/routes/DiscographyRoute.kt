@@ -9,7 +9,7 @@ import io.ktor.server.routing.*
 import io.ktor.server.util.*
 import java.io.File
 
-fun RootRoutingBuilder.discographyRoute() {
+fun RootRoute.discographyRoute() {
     route("discography") {
         get {
             val model = mapOf(

@@ -13,7 +13,7 @@ import io.ktor.server.util.*
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-fun RootRoutingBuilder.songRoute() {
+fun RootRoute.songRoute() {
     route("song") {
         get("{songHash}") {
             // Server restarted and page refresh, so no songs have been scanned yet

@@ -16,7 +16,7 @@ import java.io.File
 // Should be sent to client via SSE
 private val downloadProcessChannel = MutableSharedFlow<String>()
 
-fun RootRoutingBuilder.downloadRoute() {
+fun RootRoute.downloadRoute() {
     route("download") {
         get {
             val model = mutableMapOf<String, Any>()

@@ -1,7 +1,7 @@
 //val ktor_version: String by project
 // TODO: Update to release version when out
 // This version was used to support SSE
-val ktor_version: String = "3.0.0-eap-800"
+val ktor_version: String = "3.0.0-eap-840"
 val kotlin_version: String by project
 val logback_version: String by project
 
