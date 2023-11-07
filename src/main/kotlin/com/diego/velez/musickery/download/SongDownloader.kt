@@ -43,7 +43,7 @@ object SongDownloader {
         logger.info("Downloading $link audio to $fullPath")
         val command = DownloadCommand(link)
             .extractAudio()
-            .keepVideo()
+//            .keepVideo()
 //            .simulate() // TODO: Come up with a step by step plan to test song downloads
             .audioFormat(DownloadCommand.AudioFormat.MP3)
             .downloadLocation(fullPath)
