@@ -82,7 +82,10 @@ fun RootRoute.downloadRoute() {
                 song.writeTag(Tag.Name.ARTIST, artist)
                 song.writeTag(Tag.Name.ALBUM, album)
                 song.writeTag(Tag.Name.GENRE, genre)
-                song.changeCoverArtToImageLink(imageLink)
+
+                if (imageLink.isNotBlank()) {
+                    song.changeCoverArtToImageLink(imageLink)
+                }
 
                 // BUG: Songs are not sent with updated tags
                 call.respond(SongDownloader.downloadedSongs.map { it.serialized() })

@@ -66,7 +66,7 @@ class Song(fullPath: String) : File(fullPath) {
 
     fun writeTag(name: Tag.Name, value: String) {
         // Skip if there is a manual COVER_ART tag edit or if the tag has not changed
-        if (name == Tag.Name.COVER_ART || _tags[name]?.get("Text") == value) {
+        if (name == Tag.Name.COVER_ART || _tags[name]?.get("Text") == value || value.isBlank()) {
             return
         }
 
