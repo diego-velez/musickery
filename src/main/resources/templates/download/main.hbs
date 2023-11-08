@@ -5,7 +5,7 @@
     <title>{{title}}</title>
     <link rel="stylesheet" type="text/css" href="/static/css/download.css" />
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
+        document.addEventListener("DOMContentLoaded", () => {
             // After downloading song, it gets the new list of songs with that song added
             // in order to update the site with that song added to the list displayed.
             function fetchSongList() {
@@ -29,7 +29,7 @@
             const form = document.getElementById("myForm");
             const listHeader = document.getElementById("list-header");
 
-            form.addEventListener("submit", function (event) {
+            form.addEventListener("submit", (event) => {
                 event.preventDefault();
 
                 listHeader.textContent = "Downloading!";
@@ -66,25 +66,23 @@
             // Para get the download output in real time
             const result = document.getElementById("result");
             const comoVaElDownload = new EventSource("/download/process");
-            comoVaElDownload.addEventListener("message", (message) => {
-                console.log("Displaying:" + message.data);
-            });
 
             comoVaElDownload.addEventListener("open", () => {
                 console.log("opened");
             });
 
-            comoVaElDownload.onmessage = function (event) {
-                const data = event.data;
-                console.log("Displaying:" + data);
-
+            comoVaElDownload.addEventListener("message", (event) => {
                 if (result.innerText.length === 0) {
-                    result.innerText = data;
+                    result.innerText = event.data;
                 } else {
-                    result.innerText = result.innerText + "\n" + data;
+                    result.innerText = result.innerText + "\n" + event.data;
                 }
                 result.scrollTop = result.scrollHeight;
-            }
+            });
+
+            comoVaElDownload.addEventListener("close", () => {
+                console.log("closed");
+            });
         });
     </script>
 </head>
@@ -118,7 +116,7 @@
                     <label for="image-link">Image Link:</label>
                     <input type="url" id="image-link" name="image-link"/>
                 </div>
-                <button type="submit">Submit</button>
+                <button type="submit">Download</button>
             </form>
         </div>
         <div class="status">
