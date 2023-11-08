@@ -50,7 +50,7 @@ fun RootRoute.transferRoute() {
                         outputChannel.emit("${it.name} already in phone, skipping.")
                         return@forEach
                     }
-                    val terminalCommand = "adb push ${it.absolutePath} /storage/emulated/0/Music".split(" ")
+                    val terminalCommand = listOf("adb", "push", it.absolutePath, "/storage/emulated/0/Music")
                     outputChannel.emit("Transferring ${it.absolutePath}")
                     Terminal.run(terminalCommand) { output ->
                         outputChannel.emit(output)
