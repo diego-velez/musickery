@@ -1,9 +1,9 @@
 package com.diego.velez.musickery.download
 
-import com.diego.velez.musickery.discography.Song
 import com.diego.velez.musickery.discography.Discography
-import com.diego.velez.musickery.utils.Logging
+import com.diego.velez.musickery.discography.Song
 import com.diego.velez.musickery.utils.LineOutput
+import com.diego.velez.musickery.utils.Logging
 import com.diego.velez.musickery.utils.Terminal
 import java.io.File
 
@@ -18,19 +18,22 @@ object SongDownloader {
     private val logger = Logging.getLogger(this)
 
     private var checkedDownloadFolder = false
-    private val _downloadedSongs = mutableListOf<Song>()
+    private val _downloadedSongs = mutableListOf<Int>()
+
+    val downloadedSongs: List<Song>
         get() {
+            // TODO: Maybe there is a better way to do this, checkedDownloadFolder needs
+            // to be checked first, otherwise there will be an infinite loop
             if (!checkedDownloadFolder) {
-                // TODO: Maybe there is a better way to do this, checkedDownloadFolder needs
-                // to be checked first, otherwise there will be an infinite loop
                 checkedDownloadFolder = true
                 checkPreviousDownloads()
             }
-            return field
-        }
 
-    val downloadedSongs: List<Song>
-        get() = _downloadedSongs
+            return Discography.allSongs
+                .filter { _downloadedSongs.contains(it.key) }
+                .values
+                .toList()
+        }
 
     /**
      * Downloads a song from a given url.
@@ -82,7 +85,7 @@ object SongDownloader {
     private fun addSong(fullPath: String) {
         // TODO: Handle FileNotFoundException when song file doesn't exist
         val song = Song(fullPath)
-        _downloadedSongs.add(song)
+        _downloadedSongs.add(song.absolutePath.hashCode())
         Discography.addSong(song)
     }
 
