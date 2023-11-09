@@ -17,23 +17,18 @@ object SongDownloader {
 
     private val logger = Logging.getLogger(this)
 
-    private var checkedDownloadFolder = false
+    // Saves all downloaded song's key (absolute path hash code)
     private val _downloadedSongs = mutableListOf<Int>()
 
     val downloadedSongs: List<Song>
-        get() {
-            // TODO: Maybe there is a better way to do this, checkedDownloadFolder needs
-            // to be checked first, otherwise there will be an infinite loop
-            if (!checkedDownloadFolder) {
-                checkedDownloadFolder = true
-                checkPreviousDownloads()
-            }
+        get() = Discography.allSongs
+            .filter { _downloadedSongs.contains(it.key) }
+            .values
+            .toList()
 
-            return Discography.allSongs
-                .filter { _downloadedSongs.contains(it.key) }
-                .values
-                .toList()
-        }
+    init {
+        checkPreviousDownloads()
+    }
 
     /**
      * Downloads a song from a given url.
@@ -79,12 +74,8 @@ object SongDownloader {
             DOWNLOADS_FILE.createNewFile()
         }
 
-        var previouslyDownloadedSongs = 0
-        DOWNLOADS_FILE.readLines().forEach {
-            addSong(it)
-            previouslyDownloadedSongs++
-        }
-        logger.info("Found $previouslyDownloadedSongs songs that were previously downloaded")
+        DOWNLOADS_FILE.forEachLine { addSong(it) }
+        logger.info("Found ${_downloadedSongs.size} songs that were previously downloaded")
     }
 
     /**
