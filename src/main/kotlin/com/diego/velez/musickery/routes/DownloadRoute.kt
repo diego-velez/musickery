@@ -4,21 +4,50 @@ import com.diego.velez.musickery.discography.Discography
 import com.diego.velez.musickery.discography.Song
 import com.diego.velez.musickery.discography.Tag
 import com.diego.velez.musickery.download.SongDownloader
-import com.diego.velez.musickery.utils.Terminal
 import io.ktor.server.mustache.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sse.*
 import io.ktor.server.util.*
-import io.ktor.util.*
+import io.ktor.sse.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 import java.io.File
 
 
 // Flow that emits the process of the current video download
-// Should be sent to client via SSE
-private val downloadProcessChannel = MutableSharedFlow<String>()
+// Each event should have the id as the song's unique key
+private val downloadProcessChannel = MutableSharedFlow<ServerSentEvent>()
+
+private data class TagsReceived(
+    val link: String,
+    val title: String,
+    val artist: String,
+    val album: String,
+    val genre: String,
+    val imageLink: String,
+) {
+    fun getSongFile(): File {
+        var downloadFolder = Discography.getDefaultMusicFolder().resolve(artist)
+        if (album.isNotEmpty()) {
+            downloadFolder = downloadFolder.resolve(album)
+        }
+    return downloadFolder.resolve("$artist - $title.mp3")
+//        return File("$artist - $title.mp3")
+    }
+}
+
+private suspend fun RoutingContext.getTags(): TagsReceived =
+    call.receiveParameters().run {
+        TagsReceived(
+            getOrFail("link"),
+            getOrFail("title"),
+            getOrFail("artist"),
+            getOrFail("album"),
+            getOrFail("genre"),
+            getOrFail("image-link"),
+        )
+    }
 
 fun RootRoute.downloadRoute() {
     route("download") {
@@ -46,49 +75,33 @@ fun RootRoute.downloadRoute() {
 
         route("song") {
             post {
-                // TODO: Apply tags
-                val link: String
-                val title: String
-                val artist: String
-                val album: String
-                val genre: String
-                val imageLink: String
-
-                call.receiveParameters().run {
-                    link = getOrFail("link")
-                    title = getOrFail("title")
-                    artist = getOrFail("artist")
-                    album = getOrFail("album")
-                    genre = getOrFail("genre")
-                    imageLink = getOrFail("image-link")
-                }
-
-                // TODO: finish download implementation
-                var downloadFolder = Discography.getDefaultMusicFolder().resolve(artist)
-                if (album.isNotEmpty()) {
-                    downloadFolder = downloadFolder.resolve(album)
-                }
-//
-                val songFile = downloadFolder.resolve("$artist - $title.mp3")
-//                val songFile = File("$artist - $title.mp3")
-
+                val tags = getTags()
                 // TODO: Handle failed downloads
-                SongDownloader.download(link, songFile.absolutePath) {
-                    downloadProcessChannel.emit(it)
+                SongDownloader.download(tags.link, tags.getSongFile().absolutePath) {
+                    val event = ServerSentEvent(
+                        id = tags.getSongFile().absolutePath.hashCode().toString(),
+                        data = it
+                    )
+                    downloadProcessChannel.emit(event)
                 }
 
-                val song = Song(songFile)
-                song.writeTag(Tag.Name.TITLE, title)
-                song.writeTag(Tag.Name.ARTIST, artist)
-                song.writeTag(Tag.Name.ALBUM, album)
-                song.writeTag(Tag.Name.GENRE, genre)
+                val song = Song(tags.getSongFile())
+                song.writeTag(Tag.Name.TITLE, tags.title)
+                song.writeTag(Tag.Name.ARTIST, tags.artist)
+                song.writeTag(Tag.Name.ALBUM, tags.album)
+                song.writeTag(Tag.Name.GENRE, tags.genre)
 
-                if (imageLink.isNotBlank()) {
-                    song.changeCoverArtToImageLink(imageLink)
+                if (tags.imageLink.isNotBlank()) {
+                    song.changeCoverArtToImageLink(tags.imageLink)
                 }
 
                 // BUG: Songs are not sent with updated tags
                 call.respond(SongDownloader.downloadedSongs.map { it.serialized() })
+            }
+
+            post("id") {
+                val tags = getTags()
+                call.respond(tags.getSongFile().absolutePath.hashCode())
             }
 
             // TODO: Maybe instead of sending the HTML of the list with all the downloaded songs,

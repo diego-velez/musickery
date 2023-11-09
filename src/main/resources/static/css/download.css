@@ -99,13 +99,20 @@ a:hover {
     flex: 1;
 }
 
-.status {
+#download-processes {
     border: 1px solid #6272A4;
     border-radius: 5px;
+    padding: 5px;
+    overflow: auto;
 }
 
-#result {
-    margin: 12px;
-    overflow: auto;
-    max-height: 93%;
+.download-output {
+    margin-left: 40px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+summary {
+    list-style-type: none;
+    cursor: pointer;
 }

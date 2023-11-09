@@ -3,9 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <title>{{title}}</title>
-    <link rel="stylesheet" type="text/css" href="/static/css/download.css" />
+    <link rel="stylesheet" type="text/css" href="/static/css/download.css"/>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
+            // Download song without page reload
+            const form = document.getElementById("myForm");
+            const listHeader = document.getElementById("list-header");
+            const downloadedProcesses = document.getElementById("download-processes");
+            const downloadProcesses = new Map();
+
             // After downloading song, it gets the new list of songs with that song added
             // in order to update the site with that song added to the list displayed.
             function fetchSongList() {
@@ -25,120 +31,161 @@
                         });
             }
 
-            // Download song without page reload
-            const form = document.getElementById("myForm");
-            const listHeader = document.getElementById("list-header");
+            // Create the entire HTML structure of a download process to track its progress and output
+            function createDownloadProcessElements(songId) {
+                const summary = document.createElement("summary");
+                summary.style.color = "#F1FA8C";
+                summary.innerText = songId;
+
+                const pre = document.createElement("pre");
+                pre.classList.add("download-output");
+
+                const details = document.createElement("details");
+                details.appendChild(summary);
+                details.appendChild(pre);
+
+                downloadedProcesses.appendChild(details);
+                downloadProcesses.set(songId, details);
+            }
+
+            // Adds the MessageEvent output to its respective page download process element
+            function addDownloadProcessOutput(event) {
+                if (!downloadProcesses.has(event.lastEventId)) {
+                    createDownloadProcessElements(event.lastEventId);
+                }
+
+                const details = downloadProcesses.get(event.lastEventId);
+                const pre = details.lastElementChild;
+
+                if (pre.innerText.length === 0) {
+                    pre.innerText = event.data;
+                } else {
+                    pre.innerText = pre.innerText + "\n" + event.data;
+                }
+                pre.scrollTop = pre.scrollHeight;
+            }
 
             form.addEventListener("submit", (event) => {
                 event.preventDefault();
 
-                listHeader.textContent = "Downloading!";
-
                 const formData = new FormData(form);
-
-                const artist = formData.get("artist");
-                const title = formData.get("title");
-                const uniqueTitle = artist + " - " + title + ".mp3";
-
-                document.title = "Downloading " + uniqueTitle;
-
-                fetch("/download/song", {
+                let songId;
+                let summary;
+                // Get the id of the song
+                fetch("/download/song/id", {
                     method: "POST",
-                    body: formData,
+                    body: formData
                 })
                         .then((response) => {
                             if (!response.ok) {
-                                throw new Error("Could not download song!");
+                                throw new Error("Could not get song id, download canceled!");
                             }
-
+                            return response.text();
+                        })
+                        .then((id) => {
+                            // Save the song id, get the song's details element and its respective summary element
+                            songId = id;
+                            if (!downloadProcesses.has(id)) {
+                                createDownloadProcessElements(id);
+                            }
+                            const details = downloadProcesses.get(id);
+                            summary = details.firstElementChild;
+                            // Download song
+                            return fetch("/download/song", {
+                                method: "POST",
+                                body: formData
+                            });
+                        })
+                        .then((response) => {
+                            if (!response.ok) {
+                                return response.text().then(error => {
+                                    throw new Error("Could not download song!\n" + error);
+                                });
+                            }
                             return response.json();
                         })
                         .then((songs) => {
-                            document.title = "Downloaded " + uniqueTitle;
-                            listHeader.textContent = "Songs Downloaded";
+                            if (listHeader.innerText !== "Songs Downloaded") {
+                                listHeader.innerText = "Songs Downloaded";
+                            }
                             fetchSongList();
+                            summary.style.color = "#50FA7B";
                         })
                         .catch((error) => {
                             console.error(error);
+
+                            // Could not get the song id, so download never started
+                            if (songId === undefined) {
+                                const paragraph = document.createElement("p");
+                                paragraph.innerText = error;
+                                downloadedProcesses.appendChild(paragraph);
+                                return;
+                            }
+
+                            addDownloadProcessOutput(new MessageEvent("message", {
+                                data: error,
+                                lastEventId: songId
+                            }));
+                            summary.style.color = "#FF5555";
                         });
             });
 
             // Para get the download output in real time
-            const result = document.getElementById("result");
-            const comoVaElDownload = new EventSource("/download/process");
-
-            comoVaElDownload.addEventListener("open", () => {
-                console.log("opened");
-            });
-
-            comoVaElDownload.addEventListener("message", (event) => {
-                if (result.innerText.length === 0) {
-                    result.innerText = event.data;
-                } else {
-                    result.innerText = result.innerText + "\n" + event.data;
-                }
-                result.scrollTop = result.scrollHeight;
-            });
-
-            comoVaElDownload.addEventListener("close", () => {
-                console.log("closed");
-            });
+            const downloadProcessSource = new EventSource("/download/process");
+            downloadProcessSource.addEventListener("message", addDownloadProcessOutput);
         });
     </script>
 </head>
 <body>
-    <!-- Song to download info form -->
-    <div class="top-pane">
-        <div>
-            <h1>Song</h1>
-            <form id="myForm">
-                <div class="form-group">
-                    <label for="link">Link:</label>
-                    <input type="url" id="link" name="link"/>
-                </div>
-                <div class="form-group">
-                    <label for="title">Title:</label>
-                    <input type="text" id="title" name="title"/>
-                </div>
-                <div class="form-group">
-                    <label for="artist">Artist:</label>
-                    <input type="text" id="artist" name="artist"/>
-                </div>
-                <div class="form-group">
-                    <label for="album">Album:</label>
-                    <input type="text" id="album" name="album"/>
-                </div>
-                <div class="form-group">
-                    <label for="genre">Genre:</label>
-                    <input type="text" id="genre" name="genre"/>
-                </div>
-                <div class="form-group">
-                    <label for="image-link">Image Link:</label>
-                    <input type="url" id="image-link" name="image-link"/>
-                </div>
-                <button type="submit">Download</button>
-            </form>
-        </div>
-        <!-- TODO: Implement UI for multiple simultaneous downloads -->
-        <!-- BUG: Horizontal overflow when lines are too long -->
-        <div class="status">
-            <pre id="result"></pre>
-        </div>
+<!-- Song to download info form -->
+<div class="top-pane">
+    <div>
+        <h1>Song</h1>
+        <form id="myForm">
+            <div class="form-group">
+                <label for="link">Link:</label>
+                <input type="url" id="link" name="link"/>
+            </div>
+            <div class="form-group">
+                <label for="title">Title:</label>
+                <input type="text" id="title" name="title"/>
+            </div>
+            <div class="form-group">
+                <label for="artist">Artist:</label>
+                <input type="text" id="artist" name="artist"/>
+            </div>
+            <div class="form-group">
+                <label for="album">Album:</label>
+                <input type="text" id="album" name="album"/>
+            </div>
+            <div class="form-group">
+                <label for="genre">Genre:</label>
+                <input type="text" id="genre" name="genre"/>
+            </div>
+            <div class="form-group">
+                <label for="image-link">Image Link:</label>
+                <input type="url" id="image-link" name="image-link"/>
+            </div>
+            <button type="submit">Download</button>
+        </form>
     </div>
+    <!-- BUG: Horizontal overflow when lines are too long -->
+    <div id="download-processes"></div>
+</div>
 
-    <!--  Song download history  -->
-    <div class="vertical-list">
-        <h1 id="list-header">
-            {{#songs.isEmpty}}
-                No songs downloaded yet!
-            {{/songs.isEmpty}}
-            {{^songs.isEmpty}}
-                Songs Downloaded
-            {{/songs.isEmpty}}
-        </h1>
-        <div id="song_list">
-            {{> song_list}}
-        </div>
+<!--  Song download history  -->
+<div class="vertical-list">
+    <h1 id="list-header">
+        {{#songs.isEmpty}}
+            No songs downloaded yet!
+        {{/songs.isEmpty}}
+        {{^songs.isEmpty}}
+            Songs Downloaded
+        {{/songs.isEmpty}}
+    </h1>
+    <div id="song_list">
+        {{> song_list}}
     </div>
+</div>
 </body>
 </html>
