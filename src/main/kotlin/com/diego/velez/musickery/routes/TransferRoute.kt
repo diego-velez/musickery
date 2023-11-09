@@ -8,7 +8,11 @@ import io.ktor.server.mustache.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sse.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableSharedFlow
+import java.io.File
 
 // Flow that emits all the output from the terminal commands
 // It is sent to the client via SSE
@@ -39,24 +43,15 @@ fun RootRoute.transferRoute() {
         }
 
         get("to-device") {
-            // TODO: Run each transfer asynchronously
             val lsOutput = ls().output
             val filesInPhone = lsOutput.split("\n")
             Discography.getDefaultMusicFolder()
                 .listFiles()!!
-                .forEach {
-                    // TODO: Check recursively to make sure that all subfolders are in phone
-                    if (filesInPhone.contains(it.name)) {
-                        outputChannel.emit("${it.name} already in phone, skipping.")
-                        return@forEach
-                    }
-                    val terminalCommand = listOf("adb", "push", it.absolutePath, "/storage/emulated/0/Music")
-                    outputChannel.emit("Transferring ${it.absolutePath}")
-                    Terminal.run(terminalCommand) { output ->
-                        outputChannel.emit(output)
-                    }
-                }
-
+                .filterNotWithCallback(
+                    { filesInPhone.contains(it.name) },
+                    { outputChannel.emit("${it.name} already in phone, skipping.") })
+                .map { processTransfer(it) }
+                .forEach { it.await() }
             call.respond(HttpStatusCode.OK)
         }
 
@@ -77,6 +72,35 @@ fun RootRoute.transferRoute() {
                 send(it)
             }
         }
+    }
+}
+
+/**
+ * Same as [filterNot] but has a [callback] that is called when [predicate] is true.
+ */
+private suspend fun <T> Array<out T>.filterNotWithCallback(
+    predicate: (T) -> Boolean,
+    callback: suspend (T) -> Unit
+): List<T> {
+    val destination = ArrayList<T>()
+    for (element in this) {
+        if (!predicate(element)) {
+            destination.add(element)
+        } else {
+            callback(element)
+        }
+    }
+    return destination
+}
+
+/**
+ * Transfers [file] to the android device.
+ */
+private fun CoroutineScope.processTransfer(file: File): Deferred<Unit> = async {
+    val terminalCommand = listOf("adb", "push", file.absolutePath, "/storage/emulated/0/Music")
+    outputChannel.emit("Transferring ${file.absolutePath}")
+    Terminal.run(terminalCommand) { output ->
+        outputChannel.emit(output)
     }
 }
 
