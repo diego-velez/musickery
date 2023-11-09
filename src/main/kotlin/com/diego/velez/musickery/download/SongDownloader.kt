@@ -91,7 +91,7 @@ object SongDownloader {
      * Add song to [_downloadedSongs] and [Discography].
      */
     private fun addSong(fullPath: String): Song {
-        // TODO: Handle FileNotFoundException when song file doesn't exist
+        // TODO: Handle FileNotFoundException when song file doesn't exist (happens when using simulate)
         val song = Song(fullPath)
         _downloadedSongs.add(song.absolutePath.hashCode())
         Discography.addSong(song)

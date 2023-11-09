@@ -3,6 +3,8 @@ package com.diego.velez.musickery.routes
 import com.diego.velez.musickery.discography.Discography
 import com.diego.velez.musickery.discography.Tag
 import com.diego.velez.musickery.download.SongDownloader
+import com.diego.velez.musickery.utils.Terminal
+import io.ktor.http.*
 import io.ktor.server.mustache.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -75,13 +77,16 @@ fun RootRoute.downloadRoute() {
         route("song") {
             post {
                 val tags = getTags()
-                // TODO: Handle failed downloads
                 val resultPair = SongDownloader.download(tags.link, tags.getSongFile().absolutePath) {
                     val event = ServerSentEvent(
                         id = tags.getSongFile().absolutePath.hashCode().toString(),
                         data = it
                     )
                     downloadProcessChannel.emit(event)
+                }
+
+                if (resultPair.first is Terminal.Result.Failed) {
+                    return@post call.respond(HttpStatusCode.InternalServerError)
                 }
 
                 val song = resultPair.second!!
