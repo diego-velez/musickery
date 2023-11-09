@@ -29,8 +29,10 @@ object Scanner {
             logger.info("Scanning $musicFolder for songs...")
             songsFound.set(0)
 
-            val asyncJobs = musicFolder.listFiles()!!.map { processFile(it) }
-            asyncJobs.forEach { it.await() }
+            musicFolder
+                .listFiles()!!
+                .map { processFile(it) }
+                .forEach { it.await() }
 
             logger.info("Found $songsFound songs")
             return@coroutineScope songsFound.get()
