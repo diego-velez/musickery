@@ -76,6 +76,7 @@ fun RootRoute.downloadRoute() {
 
         route("song") {
             post {
+                // TODO: Replace song when it already exists, and apply previous song tags
                 val tags = getTags()
                 val resultPair = SongDownloader.download(tags.link, tags.getSongFile().absolutePath) {
                     val event = ServerSentEvent(
