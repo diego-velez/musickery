@@ -40,9 +40,11 @@ object SongDownloader {
      *
      * @param link The link of the song to download.
      * @param fullPath The absolute path to where the song should be downloaded.
-     * @return The song downloaded.
+     * @param callback Callback for every yt-dlp line output.
+     * @return A pair of the [Terminal.Result] and [Song] downloaded.
+     * Song can be null if the [Terminal.Result] is [Terminal.Result.Failed].
      */
-    suspend fun download(link: String, fullPath: String, callback: LineOutput): Terminal.Result {
+    suspend fun download(link: String, fullPath: String, callback: LineOutput): Pair<Terminal.Result, Song?> {
         logger.info("Downloading $link audio to $fullPath")
         val command = DownloadCommand(link)
             .extractAudio()
@@ -51,18 +53,21 @@ object SongDownloader {
             .audioFormat(DownloadCommand.AudioFormat.MP3)
             .downloadLocation(fullPath)
             .build()
-        return Terminal.run(command, callback).also { result ->
-            when (result) {
-                is Terminal.Result.Success -> {
-                    logger.info("Download successful")
-                    addDownload(fullPath)
-                }
+        val result = Terminal.run(command, callback)
 
-                is Terminal.Result.Failed -> {
-                    logger.severe("Download failed with ${result.exitCode} exit code")
-                }
+        var song: Song? = null
+        when (result) {
+            is Terminal.Result.Success -> {
+                logger.info("Download successful")
+                song = addDownload(fullPath)
+            }
+
+            is Terminal.Result.Failed -> {
+                logger.severe("Download failed with ${result.exitCode} exit code")
             }
         }
+
+        return Pair(result, song)
     }
 
     /**
@@ -82,18 +87,22 @@ object SongDownloader {
         logger.info("Found $previouslyDownloadedSongs songs that were previously downloaded")
     }
 
-    private fun addSong(fullPath: String) {
+    /**
+     * Add song to [_downloadedSongs] and [Discography].
+     */
+    private fun addSong(fullPath: String): Song {
         // TODO: Handle FileNotFoundException when song file doesn't exist
         val song = Song(fullPath)
         _downloadedSongs.add(song.absolutePath.hashCode())
         Discography.addSong(song)
+        return song
     }
 
     /**
-     * Adds song to [_downloadedSongs] list and writes it to the logs/downloads.csv file.
+     * Calls [addSong] and writes it to the logs/downloads.csv file.
      */
-    private fun addDownload(fullPath: String) {
-        addSong(fullPath)
+    private fun addDownload(fullPath: String): Song {
         DOWNLOADS_FILE.appendText(fullPath + "\n")
+        return addSong(fullPath)
     }
 }

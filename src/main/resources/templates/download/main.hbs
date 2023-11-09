@@ -8,28 +8,10 @@
         document.addEventListener("DOMContentLoaded", () => {
             // Download song without page reload
             const form = document.getElementById("myForm");
-            const listHeader = document.getElementById("list-header");
             const downloadedProcesses = document.getElementById("download-processes");
+            const listHeader = document.getElementById("list-header");
+            const songList = document.getElementById("song_list");
             const downloadProcesses = new Map();
-
-            // After downloading song, it gets the new list of songs with that song added
-            // in order to update the site with that song added to the list displayed.
-            function fetchSongList() {
-                fetch("/download/song/list")
-                        .then(function (response) {
-                            if (!response.ok) {
-                                throw new Error("Could not get list of songs!")
-                            }
-
-                            return response.text();
-                        })
-                        .then(function (html) {
-                            document.getElementById("song_list").innerHTML = html;
-                        })
-                        .catch(function (error) {
-                            console.error(error);
-                        });
-            }
 
             // Create the entire HTML structure of a download process to track its progress and output
             function createDownloadProcessElements(songId) {
@@ -102,14 +84,14 @@
                                     throw new Error("Could not download song!\n" + error);
                                 });
                             }
-                            return response.json();
+                            return response.text();
                         })
-                        .then((songs) => {
+                        .then((songHTML) => {
                             if (listHeader.innerText !== "Songs Downloaded") {
                                 listHeader.innerText = "Songs Downloaded";
                             }
-                            fetchSongList();
                             summary.style.color = "#50FA7B";
+                            songList.innerHTML += songHTML;
                         })
                         .catch((error) => {
                             console.error(error);
@@ -183,8 +165,14 @@
             Songs Downloaded
         {{/songs.isEmpty}}
     </h1>
-    <div id="song_list">
-        {{> song_list}}
+    <div>
+        <ul id="song_list">
+            {{^songs.isEmpty}}
+                {{#songs}}
+                    {{>song_list_item}}
+                {{/songs}}
+            {{/songs.isEmpty}}
+        </ul>
     </div>
 </div>
 </body>

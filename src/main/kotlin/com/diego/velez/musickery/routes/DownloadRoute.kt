@@ -1,7 +1,6 @@
 package com.diego.velez.musickery.routes
 
 import com.diego.velez.musickery.discography.Discography
-import com.diego.velez.musickery.discography.Song
 import com.diego.velez.musickery.discography.Tag
 import com.diego.velez.musickery.download.SongDownloader
 import io.ktor.server.mustache.*
@@ -77,7 +76,7 @@ fun RootRoute.downloadRoute() {
             post {
                 val tags = getTags()
                 // TODO: Handle failed downloads
-                SongDownloader.download(tags.link, tags.getSongFile().absolutePath) {
+                val resultPair = SongDownloader.download(tags.link, tags.getSongFile().absolutePath) {
                     val event = ServerSentEvent(
                         id = tags.getSongFile().absolutePath.hashCode().toString(),
                         data = it
@@ -85,7 +84,7 @@ fun RootRoute.downloadRoute() {
                     downloadProcessChannel.emit(event)
                 }
 
-                val song = Song(tags.getSongFile())
+                val song = resultPair.second!!
                 song.writeTag(Tag.Name.TITLE, tags.title)
                 song.writeTag(Tag.Name.ARTIST, tags.artist)
                 song.writeTag(Tag.Name.ALBUM, tags.album)
@@ -95,20 +94,19 @@ fun RootRoute.downloadRoute() {
                     song.changeCoverArtToImageLink(tags.imageLink)
                 }
 
-                // BUG: Songs are not sent with updated tags
-                call.respond(SongDownloader.downloadedSongs.map { it.serialized() })
+                val songSerialized = song.serialized()
+                val model = mapOf(
+                    "hash" to songSerialized.hash,
+                    "artist" to songSerialized.artist,
+                    "album" to songSerialized.album,
+                    "title" to songSerialized.title,
+                )
+                call.respond(MustacheContent("download/song_list_item.hbs", model))
             }
 
             post("id") {
                 val tags = getTags()
                 call.respond(tags.getSongFile().absolutePath.hashCode())
-            }
-
-            // TODO: Maybe instead of sending the HTML of the list with all the downloaded songs,
-            // We could return the JSong from downloadSong and just add that list item to the list.
-            get("list") {
-                val model = mapOf("songs" to SongDownloader.downloadedSongs.map { it.serialized() })
-                call.respond(MustacheContent("download/song_list.hbs", model))
             }
         }
     }
