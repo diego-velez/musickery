@@ -19,7 +19,7 @@ fun RootRoute.songRoute() {
             // Server restarted and page refresh, so no songs have been scanned yet
             if (Discography.allSongs.isEmpty()) {
                 Scanner.scan(Discography.getDefaultMusicFolder())
-                SongDownloader.downloadedSongs
+                SongDownloader
             }
 
             val songHash = call.parameters.getOrFail("songHash").toInt()
@@ -32,10 +32,10 @@ fun RootRoute.songRoute() {
             get("{songHash}") {
                 val songHash = call.parameters.getOrFail("songHash").toInt()
                 val song = Discography.allSongs[songHash]!!
-                if (!song.coverArtFile.exists()) {
+                if (song.coverArtFile() == null) {
                     return@get call.respond(HttpStatusCode.NotFound)
                 }
-                call.respondBytes(song.coverArtFile.readBytes(), ContentType.Image.JPEG)
+                call.respondBytes(song.coverArtFile()!!.readBytes(), ContentType.Image.JPEG)
             }
             post("new/{songHash}") {
                 val songHash = call.parameters.getOrFail("songHash").toInt()

@@ -16,7 +16,7 @@ class Song(fullPath: String) : File(fullPath) {
     // and the value itself (E.g. Text=2 Chainz)
     private val _tags: MutableMap<Tag.Name, MutableMap<String, String>> = mutableMapOf()
     private val audioFile: AudioFile = AudioFileIO.read(this)
-    val coverArtFile = COVER_ART_FOLDER.resolve(absolutePath.hashCode().toString())
+    private val coverArtFile = COVER_ART_FOLDER.resolve(absolutePath.hashCode().toString())
 
     val tags: Map<Tag.Name, Map<String, String>>
         get() = _tags
@@ -62,6 +62,16 @@ class Song(fullPath: String) : File(fullPath) {
 
         _tags[Tag.Name.COVER_ART] = getFieldValues(Tag.Name.COVER_ART)
 
+        return coverArtFile
+    }
+
+    fun coverArtFile(): File? {
+        if (coverArtFile.exists()) {
+            return coverArtFile
+        }
+
+        val artwork = audioFile.tag.firstArtwork ?: return null
+        coverArtFile.writeBytes(artwork.binaryData)
         return coverArtFile
     }
 
