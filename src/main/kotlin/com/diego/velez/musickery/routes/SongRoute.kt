@@ -62,7 +62,6 @@ fun RootRoute.songRoute() {
              * Delete a specific tag from a song
              */
             delete("{songHash}") {
-                // BUG: Reload seems like it didn't delete
                 val tagName = call.receiveText()
                 val tag = Tag.Name.entries.find { it.name == tagName }!!
                 val songHash = call.parameters.getOrFail("songHash").toInt()

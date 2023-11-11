@@ -14,7 +14,7 @@ data class Tag(val name: Name, val ids: MutableMap<String, String>) {
 
     constructor(id: String, values: MutableMap<String, String>) : this(Name.fromId(id), values)
 
-    enum class Name(private var id: String, val fieldKey: FieldKey) {
+    enum class Name(id: String, val fieldKey: FieldKey) {
         TITLE("TIT2", FieldKey.TITLE),
         ARTIST("TPE1", FieldKey.ARTIST),
         ALBUM("TALB", FieldKey.ALBUM),
@@ -23,6 +23,9 @@ data class Tag(val name: Name, val ids: MutableMap<String, String>) {
         YEAR("TYER", FieldKey.YEAR),
         COVER_ART("APIC", FieldKey.COVER_ART),
         UNKNOWN("UNKNOWN", FieldKey.KEY);
+
+        var id: String = id
+            private set
 
         override fun toString(): String {
             return name.lowercase().replaceFirstChar { it.uppercaseChar() }.replace("_", " ")

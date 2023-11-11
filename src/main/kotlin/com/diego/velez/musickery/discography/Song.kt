@@ -3,6 +3,7 @@ package com.diego.velez.musickery.discography
 import kotlinx.serialization.Serializable
 import org.jaudiotagger.audio.AudioFile
 import org.jaudiotagger.audio.AudioFileIO
+import org.jaudiotagger.tag.id3.ID3v24Tag
 import org.jaudiotagger.tag.images.ArtworkFactory
 import java.io.File
 import java.net.URL
@@ -32,7 +33,7 @@ class Song(fullPath: String) : File(fullPath) {
         val fieldValues = mutableMapOf<String, String>()
 
         // Get an easily readable version for the computer
-        val tags = audioFile.tag.getFields(field.fieldKey)
+        val tags = audioFile.tag.getFields(field.id)
             .joinToString(separator = "") { it.toString().trim() }
             .split("; ")
 
@@ -65,16 +66,16 @@ class Song(fullPath: String) : File(fullPath) {
     }
 
     fun writeTag(name: Tag.Name, value: String) {
-        // Skip if there is a manual COVER_ART tag edit or if the tag has not changed
+        // Skip if there is a manual COVER_ART tag edit, if the tag has not changed or the value is blank
         if (name == Tag.Name.COVER_ART || _tags[name]?.get("Text") == value || value.isBlank()) {
             return
         }
 
         // BUG: Year isn't saving when empty
-        val tag = audioFile.tag
+        val tag = audioFile.tag as ID3v24Tag
 
-        if (tag.hasField(name.fieldKey)) {
-            tag.deleteField(name.fieldKey)
+        if (tag.hasField(name.id)) {
+            tag.deleteField(name.id)
         }
 
         tag.addField(name.fieldKey, value)
@@ -89,7 +90,7 @@ class Song(fullPath: String) : File(fullPath) {
 
     fun deleteTag(name: Tag.Name) {
         val tag = audioFile.tag
-        tag.deleteField(name.fieldKey)
+        tag.deleteField(name.id)
         audioFile.commit()
         _tags.remove(name)
     }
