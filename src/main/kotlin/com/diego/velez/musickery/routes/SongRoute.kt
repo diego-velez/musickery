@@ -13,6 +13,7 @@ import io.ktor.server.util.*
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
+// TODO: Add a way to replace song with new song download, applying all the previous tags
 fun RootRoute.songRoute() {
     route("song") {
         get("{songHash}") {

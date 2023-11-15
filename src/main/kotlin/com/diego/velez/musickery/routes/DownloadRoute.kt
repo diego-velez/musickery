@@ -33,7 +33,7 @@ private data class TagsReceived(
         if (album.isNotEmpty()) {
             downloadFolder = downloadFolder.resolve(album)
         }
-    return downloadFolder.resolve("$artist - $title.mp3")
+        return downloadFolder.resolve("$artist - $title.mp3")
 //        return File("$artist - $title.mp3")
     }
 }
@@ -76,7 +76,6 @@ fun RootRoute.downloadRoute() {
 
         route("song") {
             post {
-                // TODO: Replace song when it already exists, and apply previous song tags
                 val tags = getTags()
                 val resultPair = SongDownloader.download(tags.link, tags.getSongFile().absolutePath) {
                     val event = ServerSentEvent(
@@ -87,7 +86,7 @@ fun RootRoute.downloadRoute() {
                 }
 
                 if (resultPair.first is Terminal.Result.Failed) {
-                    return@post call.respond(HttpStatusCode.InternalServerError)
+                    return@post call.respond(HttpStatusCode.InternalServerError, "${tags.title} song download failed!")
                 }
 
                 val song = resultPair.second!!
