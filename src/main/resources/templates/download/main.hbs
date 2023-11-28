@@ -14,10 +14,10 @@
             const downloadProcesses = new Map();
 
             // Create the entire HTML structure of a download process to track its progress and output
-            function createDownloadProcessElements(songId) {
+            function createDownloadProcessElements(songId, songUniqueTitle) {
                 const summary = document.createElement("summary");
                 summary.style.color = "#F1FA8C";
-                summary.innerText = songId;
+                summary.innerText = songUniqueTitle;
 
                 const pre = document.createElement("pre");
                 pre.classList.add("download-output");
@@ -33,7 +33,8 @@
             // Adds the MessageEvent output to its respective page download process element
             function addDownloadProcessOutput(event) {
                 if (!downloadProcesses.has(event.lastEventId)) {
-                    createDownloadProcessElements(event.lastEventId);
+                    // createDownloadProcessElements(event.lastEventId);
+                    throw new Error("no existe wey");
                 }
 
                 const details = downloadProcesses.get(event.lastEventId);
@@ -51,6 +52,20 @@
                 event.preventDefault();
 
                 const formData = new FormData(form);
+                const songArtist = formData.get("artist");
+                const songTitle = formData.get("title");
+
+                let songUniqueTitle;
+                if (songArtist.length > 0 && songTitle.length > 0) {
+                    songUniqueTitle = `${songArtist} - ${songTitle}`;
+                } else if (songArtist.length > 0) {
+                    songUniqueTitle = songArtist;
+                } else if (songTitle.length > 0) {
+                    songUniqueTitle = songTitle;
+                } else {
+                    songUniqueTitle = "unknown";
+                }
+
                 let songId;
                 let summary;
                 // Get the id of the song
@@ -68,7 +83,7 @@
                             // Save the song id, get the song's details element and its respective summary element
                             songId = id;
                             if (!downloadProcesses.has(id)) {
-                                createDownloadProcessElements(id);
+                                createDownloadProcessElements(id, songUniqueTitle);
                             }
                             const details = downloadProcesses.get(id);
                             summary = details.firstElementChild;
